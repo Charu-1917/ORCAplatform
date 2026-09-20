@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", "Plus Jakarta Sans", system-ui, sans-serif;
+  background: linear-gradient(180deg, #F0F6FF 0%, #E1ECFD 45%, #FFFFFF 100%);
+  color: #16233B;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(85, 144, 230, 0.25);
+}
+
+/* ---------- Glassmorphism ---------- */
+.glass {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(61, 113, 201, 0.25);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(61, 113, 201, 0.45); }
+
+/* ---------- Animated wave background ---------- */
+.wave-scene {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.wave-layer {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  height: 100%;
+  background-repeat: repeat-x;
+  background-position: bottom;
+  background-size: 1200px 100%;
+}
+
+.wave-layer.layer-1 {
+  bottom: -6px;
+  opacity: 0.35;
+  animation: wave-drift 18s linear infinite;
+}
+.wave-layer.layer-2 {
+  bottom: -2px;
+  opacity: 0.5;
+  animation: wave-drift 12s linear infinite reverse;
+}
+.wave-layer.layer-3 {
+  bottom: 0;
+  opacity: 0.7;
+  animation: wave-drift 8s linear infinite;
+}
+
+@keyframes wave-drift {
+  0% { background-position-x: 0; }
+  100% { background-position-x: -1200px; }
+}
+
+/* ---------- Markdown output styling ---------- */
+.orca-markdown h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: #1E3253;
+}
+.orca-markdown h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 1.1rem 0 0.4rem;
+  color: #2C4A7D;
+}
+.orca-markdown p { margin: 0.35rem 0; line-height: 1.6; }
+.orca-markdown ul { margin: 0.25rem 0 0.75rem; padding-left: 1.25rem; list-style: disc; }
+.orca-markdown li { margin: 0.3rem 0; line-height: 1.55; list-style: disc; }
+.orca-markdown strong { color: #1E3253; font-weight: 700; }
+.orca-markdown blockquote {
+  border-left: 3px solid #A9CBF7;
+  padding: 0.4rem 0.8rem;
+  margin: 0.75rem 0 0.25rem;
+  color: #5A6B85;
+  font-size: 0.85rem;
+  background: rgba(240, 246, 255, 0.6);
+  border-radius: 0 10px 10px 0;
+}
+
+.shimmer-bg {
+  background: linear-gradient(90deg, #E1ECFD 25%, #F5F9FF 50%, #E1ECFD 75%);
+  background-size: 400% 100%;
+}
+
+.pill-toggle-active {
+  background: linear-gradient(135deg, #5590E6, #3D71C9);
+  color: white;
+  box-shadow: 0 4px 14px rgba(61, 113, 201, 0.35);
+}
