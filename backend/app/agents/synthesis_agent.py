@@ -17,6 +17,7 @@ ALERT_EMOJI = {"green": "🟢", "yellow": "🟡", "red": "🔴"}
 
 
 def build_markdown(
+    query: str,
     location_name: str,
     location_state: str,
     intent: str,
@@ -27,6 +28,37 @@ def build_markdown(
     chart_data: list[dict],
 ) -> str:
     lines = [f"## Marine Advisory — {location_name}, {location_state}"]
+    lines.append(f"**Your question:** {query}")
+    lines.append("")
+    lines.append("### Answer")
+    if intent == "hazard":
+        if hazards:
+            lines.append(
+                f"For {location_name}, the current marine safety status is "
+                f"**{alert_level.upper()}**. "
+                f"The most relevant advisory is **{hazards[0]['title']}**: "
+                f"{hazards[0]['description']}"
+            )
+        else:
+            lines.append(f"No active marine hazards are reported for {location_name}.")
+    elif intent == "analytics":
+        latest = chart_data[-1]
+        lines.append(
+            f"For {location_name}, the latest readings are **{latest['sst']} °C** "
+            f"SST and **{latest['chlorophyll']} mg/m³** chlorophyll-a, with a "
+            f"7-day SST↔Chlorophyll correlation of **{correlation}**."
+        )
+    elif ranked_zones:
+        best_zone = ranked_zones[0]
+        lines.append(
+            f"The strongest nearby PFZ for {location_name} is **{best_zone['name']}** "
+            f"at {best_zone['lat']:.3f}, {best_zone['lng']:.3f}, with a "
+            f"productivity score of **{best_zone['score']:.2f}** and depth "
+            f"**{best_zone['depth_m']} m**."
+        )
+    else:
+        lines.append(f"No high-confidence PFZ candidates were found near {location_name}.")
+    lines.append("")
     lines.append(
         f"**Overall Sea Safety Status:** {ALERT_EMOJI[alert_level]} "
         f"{alert_level.upper()}"
@@ -99,6 +131,7 @@ def build_audio_text(
 
 
 def run(
+    query: str,
     location_name: str,
     location_state: str,
     intent: str,
@@ -111,7 +144,7 @@ def run(
     deep_reasoning: bool,
 ) -> tuple[dict, AgentStep]:
     markdown = build_markdown(
-        location_name, location_state, intent, ranked_zones, hazards,
+        query, location_name, location_state, intent, ranked_zones, hazards,
         alert_level, correlation, chart_data,
     )
     audio_text = build_audio_text(language, location_name, len(ranked_zones), alert_level, hazards)

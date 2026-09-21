@@ -32,6 +32,7 @@ def run_pipeline(req: QueryRequest) -> QueryResponse:
     loc = COASTAL_LOCATIONS[router_ctx["location_key"]]
 
     synth_ctx, synth_step = synthesis_agent.run(
+        query=req.query,
         location_name=loc["name"],
         location_state=loc["state"],
         intent=router_ctx["intent"],
