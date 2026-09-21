@@ -19,6 +19,27 @@ const FALLBACK_LANGUAGES: LanguageOption[] = [
   { code: "mr", label: "Marathi" },
 ];
 
+const SCRIPT_LANGUAGE_RANGES: Record<string, [number, number]> = {
+  hi: [0x0900, 0x097f],
+  bn: [0x0980, 0x09ff],
+  gu: [0x0a80, 0x0aff],
+  ta: [0x0b80, 0x0bff],
+  te: [0x0c00, 0x0c7f],
+  ml: [0x0d00, 0x0d7f],
+};
+
+function detectQueryLanguage(query: string): string | null {
+  for (const [code, [start, end]] of Object.entries(SCRIPT_LANGUAGE_RANGES)) {
+    if ([...query].some((character) => {
+      const value = character.codePointAt(0) ?? 0;
+      return value >= start && value <= end;
+    })) {
+      return code;
+    }
+  }
+  return null;
+}
+
 export default function App() {
   const [languages, setLanguages] = useState<LanguageOption[]>(FALLBACK_LANGUAGES);
   const [language, setLanguage] = useState("en");
@@ -47,9 +68,10 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
+      const queryLanguage = detectQueryLanguage(query);
       const result = await runQuery({
         query,
-        language,
+        language: queryLanguage ?? language,
         deep_reasoning: deepReasoning,
         live_data: liveData,
         voice_mode: voiceMode,
