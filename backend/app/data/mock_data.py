@@ -392,6 +392,18 @@ def resolve_language(text: str, explicit: str | None) -> str:
     if explicit and explicit in LANGUAGES:
         return explicit
     text_l = text.lower()
+    script_ranges = {
+        "hi": ("\u0900", "\u097f"),
+        "bn": ("\u0980", "\u09ff"),
+        "gu": ("\u0a80", "\u0aff"),
+        "ta": ("\u0b80", "\u0bff"),
+        "te": ("\u0c00", "\u0c7f"),
+        "ml": ("\u0d00", "\u0d7f"),
+        "mr": ("\u0900", "\u097f"),
+    }
+    for code, (start, end) in script_ranges.items():
+        if any(start <= character <= end for character in text):
+            return code
     for code, kws in LANGUAGE_KEYWORDS.items():
         for kw in kws:
             if kw in text_l:
