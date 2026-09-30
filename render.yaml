@@ -1,0 +1,28 @@
+# Render Blueprint for ORCA (web app + FastAPI backend).
+# The AI model runs on the team PC's Ollama, reached through ORCA's key-protected
+# /gateway over a fixed tunnel address (see ocra-platform/backend/README.md).
+services:
+  - type: web
+    name: orca-ocean-intelligence
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r ocra-platform/backend/requirements.txt
+    startCommand: cd ocra-platform/backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: HOST
+        value: 0.0.0.0
+      - key: OLLAMA_MODEL
+        value: gemma3:4b
+      - key: OLLAMA_TIMEOUT
+        value: "300"
+      # https://<your-static-domain>.ngrok-free.app/gateway  (set in the Render dashboard)
+      - key: OLLAMA_BASE_URL
+        sync: false
+      # Same value as ORCA_GATEWAY_KEY in the PC's ocra-platform/backend/.env
+      - key: OLLAMA_API_KEY
+        sync: false

@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+requests>=2.31.0
+httpx
+numpy
+xarray
+netCDF4
+edge-tts

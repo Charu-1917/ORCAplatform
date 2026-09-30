@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#3a6bc4">
+  <title>ORCA — Ocean Intelligence Assistant</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%233a6bc4'/%3E%3Cg fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M7 12c2-1.7 4-1.7 6 0s4 1.7 6 0 4-1.7 6 0'/%3E%3Cpath d='M7 17c2-1.7 4-1.7 6 0s4 1.7 6 0 4-1.7 6 0'/%3E%3Cpath d='M7 22c2-1.7 4-1.7 6 0s4 1.7 6 0 4-1.7 6 0'/%3E%3C/g%3E%3C/svg%3E">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS for Ocean Map Add-On -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- Platform Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Chat History, Sea Alerts & Marine News Add-Ons -->
+  <link rel="stylesheet" href="features.css">
+</head>
+<body>
+  <!-- Reusable ORCA wave logo -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="orcaWaves" viewBox="0 0 24 24">
+      <path d="M3 8c1.5-1.3 3-1.3 4.5 0s3 1.3 4.5 0 3-1.3 4.5 0 3 1.3 4.5 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+      <path d="M3 12.5c1.5-1.3 3-1.3 4.5 0s3 1.3 4.5 0 3-1.3 4.5 0 3 1.3 4.5 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+      <path d="M3 17c1.5-1.3 3-1.3 4.5 0s3 1.3 4.5 0 3-1.3 4.5 0 3 1.3 4.5 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+    </symbol>
+  </svg>
+
+  <div class="orca-app-layout">
+
+    <!-- ===================== Top Header ===================== -->
+    <header class="app-navbar" id="appNavbar">
+      <div class="navbar-brand">
+        <!-- Chat History Drawer Trigger -->
+        <button type="button" class="icon-btn history-toggle-btn" id="toggleHistoryBtn" title="Chat history" aria-label="Open chat history">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <a class="brand-link" href="/" aria-label="ORCA home">
+          <span class="brand-avatar"><svg width="22" height="22"><use href="#orcaWaves"/></svg></span>
+          <span class="brand-titles">
+            <span class="brand-name">ORCA</span>
+            <span class="brand-tag">Oceanic Reasoning &amp; Collaborative Agents</span>
+          </span>
+        </a>
+        <span class="proto-pill">ISRO · SIH Prototype</span>
+      </div>
+
+      <nav class="navbar-actions" aria-label="Main">
+        <!-- New Chat (visible once a conversation starts) -->
+        <button type="button" class="nav-link new-chat-nav-btn" id="newChatBtn" title="Start a new chat">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span class="nav-btn-label">New chat</span>
+        </button>
+
+        <!-- Sea Alerts & Marine News Panel Button -->
+        <button type="button" class="nav-link alerts-nav-btn" id="toggleAlertsBtn" title="Sea alerts & marine news" aria-label="Open sea alerts and marine news">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span class="nav-btn-label">Alerts</span>
+          <span class="alerts-badge" id="alertsBadge" style="display: none;">0</span>
+        </button>
+
+        <a class="nav-link" href="/docs" target="_blank" rel="noopener" title="Interactive API (Swagger)">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline><line x1="14" y1="4" x2="10" y2="20"></line></svg>
+          <span class="nav-btn-label">API</span>
+        </a>
+        <a class="nav-link" href="/redoc" target="_blank" rel="noopener" title="API documentation">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"></path><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"></path></svg>
+          <span class="nav-btn-label">Docs</span>
+        </a>
+
+        <!-- Target Language -->
+        <label class="lang-pill" for="langSelect" title="Answer language">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg>
+          <select id="langSelect" class="lang-select" aria-label="Answer language">
+            <option value="auto">Auto</option>
+            <option value="en">English</option>
+            <option value="ta">தமிழ்</option>
+            <option value="hi">हिन्दी</option>
+            <option value="te">తెలుగు</option>
+            <option value="ml">മലയാളം</option>
+            <option value="kn">ಕನ್ನಡ</option>
+            <option value="gu">ગુજરાતી</option>
+            <option value="mr">मराठी</option>
+            <option value="bn">বাংলা</option>
+          </select>
+        </label>
+      </nav>
+    </header>
+
+    <!-- ===================== Main ===================== -->
+    <main class="chat-main" id="chatMain">
+
+      <!-- Hero (landing) -->
+      <section class="welcome-screen" id="welcomeScreen">
+        <!-- Animated ocean waves -->
+        <div class="hero-waves" aria-hidden="true">
+          <svg class="waves-svg" viewBox="0 24 150 28" preserveAspectRatio="none">
+            <defs>
+              <path id="gentleWave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/>
+            </defs>
+            <g class="wave-parallax">
+              <use href="#gentleWave" x="48" y="0" fill="rgba(141,174,230,0.55)"/>
+              <use href="#gentleWave" x="48" y="3" fill="rgba(122,160,224,0.55)"/>
+              <use href="#gentleWave" x="48" y="5" fill="rgba(108,148,218,0.6)"/>
+              <use href="#gentleWave" x="48" y="7" fill="#86a9e3"/>
+            </g>
+          </svg>
+          <div class="waves-fill"></div>
+        </div>
+        <div class="welcome-avatar"><svg width="40" height="40"><use href="#orcaWaves"/></svg></div>
+        <h1 class="welcome-title">Ask ORCA about the Indian Ocean</h1>
+        <p class="welcome-subtitle">Multi-agent marine intelligence for fishermen &amp; coastal communities — powered by live INCOIS / ISRO ocean data, PFZ reasoning, and multilingual safety advisories.</p>
+      </section>
+
+      <!-- Conversation -->
+      <div class="messages-viewport" id="messagesViewport">
+        <div class="messages-track" id="messagesTrack">
+          <div class="chat-thread" id="chatThread"></div>
+
+          <!-- Reasoning Indicator Row -->
+          <div class="thinking-row" id="thinkingRow" style="display: none;" aria-live="polite">
+            <div class="assistant-avatar"><svg width="18" height="18"><use href="#orcaWaves"/></svg></div>
+            <div class="thinking-bubble">
+              <div class="thinking-header">
+                <span class="thinking-title">ORCA is reasoning</span>
+                <span class="thinking-agents-hint">Consulting Weather, Satellite, SciDL, Routing &amp; Safety agents...</span>
+              </div>
+              <div class="typing-dots">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Composer -->
+      <div class="composer-container">
+        <div class="composer-wrapper">
+          <div class="composer-card" id="composerCard">
+            <textarea
+              id="messageInput"
+              class="composer-textarea"
+              rows="1"
+              placeholder="e.g. Where is the nearest Potential Fishing Zone in Tamil Nadu today?"
+              aria-label="Ask ORCA"
+            ></textarea>
+            <button type="button" class="send-btn" id="sendBtn" disabled aria-label="Send message">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Mode chips -->
+          <div class="mode-chips">
+            <button type="button" class="mode-chip active" id="deepReasoningChip" aria-pressed="true" title="Show which agents ORCA consulted for each answer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"></path><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"></path><path d="M12 5v13"></path></svg>
+              <span>DeepReasoning (Agentic)</span>
+            </button>
+            <button type="button" class="mode-chip" id="toggleMapDrawerBtn" title="Open the live ocean data map">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a7.31 7.31 0 0 0 10 10Z"></path><path d="m9 15 3-3"></path><path d="M17 13a6 6 0 0 0-6-6"></path><path d="M21 13A10 10 0 0 0 11 3"></path></svg>
+              <span>Live ISRO Earth Data</span>
+            </button>
+            <button type="button" class="mode-chip" id="voiceModeBtn" aria-pressed="false" title="Speak your question; ORCA reads the answer aloud">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+              <span id="voiceModeLabel">Voice Mode</span>
+            </button>
+          </div>
+
+          <!-- Context tools: location, SciDL model, fine-tuning -->
+          <div class="composer-context-bar" id="contextBar">
+            <button type="button" class="context-pill" id="locationToggleBtn" title="Set marine coordinates">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              <span id="locationBadgeText">Chennai Offshore (13.08° N, 80.27° E)</span>
+              <span class="pill-arrow">▾</span>
+            </button>
+            <label class="context-pill model-pill" for="sidebarModelSelect" title="SciDL forecast model used by the map">
+              <span>Model</span>
+              <select id="sidebarModelSelect" class="nav-model-select">
+                <option value="SFNO">NVIDIA SFNO (FourCastNet v3)</option>
+                <option value="PINN_SWIN">PyTorch PINN &amp; Swin-UNet</option>
+                <option value="SFNO_FINETUNED_INDIAN_OCEAN">SFNO Fine-Tuned (Indian Ocean)</option>
+                <option value="PINN_CORRECTOR_INDIAN_OCEAN">PINN Corrector (ARGO Float)</option>
+                <option value="FOURCASTNET">FourCastNet v3 Global</option>
+                <option value="GRAPHCAST">Google DeepMind GraphCast</option>
+                <option value="AURORA">Microsoft Aurora Foundation</option>
+              </select>
+            </label>
+            <button type="button" class="context-pill" id="openFinetuneModalBtn" title="Open Fine-Tuning Manager">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Fine-Tuning</span>
+            </button>
+          </div>
+
+          <!-- Location Input Drawer -->
+          <div class="location-drawer" id="locationDrawer" style="display: none;">
+            <div class="coords-inputs-row">
+              <div class="coord-field">
+                <label for="latInput">Latitude (°N)</label>
+                <input type="number" step="any" id="latInput" class="coord-input" value="13.0827" placeholder="13.0827">
+              </div>
+              <div class="coord-field">
+                <label for="lonInput">Longitude (°E)</label>
+                <input type="number" step="any" id="lonInput" class="coord-input" value="80.2707" placeholder="80.2707">
+              </div>
+              <div class="coord-actions">
+                <button type="button" class="mini-btn primary" id="applyCoordsBtn">Set</button>
+                <button type="button" class="mini-btn" id="resetChennaiBtn">Chennai</button>
+                <button type="button" class="mini-btn clear" id="clearCoordsBtn">Omit Coords</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="composer-disclaimer">
+            ORCA synthesizes evidence from specialized agents &amp; SciDL neural surrogates. Verify emergency advisories with maritime authorities (Coast Guard: 1554).
+          </div>
+        </div>
+      </div>
+
+      <!-- Suggested questions (landing) -->
+      <div class="starter-grid" id="welcomeSuggestions">
+        <button type="button" class="starter-card" data-prompt="Where is the nearest Potential Fishing Zone (PFZ) in Tamil Nadu today?" data-lat="13.0827" data-lon="80.2707">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2z"></path></svg>
+          <span>Where is the nearest Potential Fishing Zone (PFZ) in Tamil Nadu today?</span>
+        </button>
+        <button type="button" class="starter-card" data-prompt="Check cyclone and high wave advisories near Gujarat coast" data-lat="20.85" data-lon="70.30">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2z"></path></svg>
+          <span>Check cyclone and high wave advisories near Gujarat coast</span>
+        </button>
+        <button type="button" class="starter-card" data-prompt="Analyze SST and Chlorophyll correlation off Kochi" data-lat="9.95" data-lon="76.10">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2z"></path></svg>
+          <span>Analyze SST and Chlorophyll correlation off Kochi</span>
+        </button>
+        <button type="button" class="starter-card" data-prompt="Is it safe to go fishing near Visakhapatnam this week?" data-lat="17.65" data-lon="83.40">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2z"></path></svg>
+          <span>Is it safe to go fishing near Visakhapatnam this week?</span>
+        </button>
+        <button type="button" class="starter-card" data-prompt="கன்னியாகுமரி அருகே மீன்பிடிக்க ஏற்ற பகுதிகள் எவை?" data-lat="7.95" data-lon="77.55" data-lang="ta">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2z"></path></svg>
+          <span>Show potential fishing zones near Kanyakumari in Tamil</span>
+        </button>
+      </div>
+
+      <!-- Live coast band (landing) -->
+      <section class="live-band" id="liveBand" aria-label="Live along the Indian coast">
+        <div class="live-band-inner">
+          <div class="live-band-head">
+            <h2>Live along the Indian coast</h2>
+            <button type="button" class="live-band-link" id="liveBandAllBtn">All alerts &amp; news →</button>
+          </div>
+          <div class="live-band-grid">
+            <div class="live-col">
+              <div class="live-col-title">🌊 Sea conditions (next 24 h)</div>
+              <div class="live-list" id="liveAlertsList"><div class="live-empty">Loading live sea data...</div></div>
+            </div>
+            <div class="live-col">
+              <div class="live-col-title">📰 Latest marine news</div>
+              <div class="live-list" id="liveNewsList"><div class="live-empty">Loading headlines...</div></div>
+            </div>
+          </div>
+          <p class="live-band-note">Sea alerts are computed from Open-Meteo forecasts, not official INCOIS / IMD bulletins. News from Google News RSS.</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- ===================== Pop-up Ocean Map Drawer ===================== -->
+    <div class="map-drawer-backdrop" id="mapDrawerBackdrop"></div>
+    <div class="map-drawer-panel" id="mapDrawerPanel">
+      <div class="map-drawer-header">
+        <div class="drawer-title">
+          <span>Live Ocean Data Map</span>
+          <span class="drawer-sub">Click the map to select a location</span>
+        </div>
+        <button type="button" class="icon-btn" id="closeMapDrawerBtn" title="Close Map">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="map-drawer-toolbar">
+        <div class="toolbar-inputs">
+          <input type="number" step="any" id="drawerLatInput" value="13.0827" placeholder="Lat" aria-label="Latitude">
+          <input type="number" step="any" id="drawerLonInput" value="80.2707" placeholder="Lon" aria-label="Longitude">
+          <button type="button" class="mini-btn primary" id="updateDrawerCoordsBtn">Set</button>
+        </div>
+        <div class="map-preset-pills">
+          <button type="button" class="pill-btn" id="presetChennai">Chennai</button>
+          <button type="button" class="pill-btn" id="presetBayOfBengal">Bay of Bengal</button>
+          <button type="button" class="pill-btn" id="presetArabianSea">Arabian Sea</button>
+        </div>
+      </div>
+
+      <div class="map-container-wrapper">
+        <div id="oceanMap" class="leaflet-ocean-map"></div>
+        <div class="map-telemetry-overlay" id="mapTelemetryOverlay">
+          <div class="telemetry-item">
+            <span class="telemetry-label">Target</span>
+            <span class="telemetry-val" id="telemetryCoords">13.0827° N, 80.2707° E</span>
+          </div>
+          <div class="telemetry-item">
+            <span class="telemetry-label">SWH</span>
+            <span class="telemetry-val highlight" id="telemetrySwh">–</span>
+          </div>
+          <div class="telemetry-item">
+            <span class="telemetry-label">Wind</span>
+            <span class="telemetry-val" id="telemetryWind">–</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== Chat History Drawer ===================== -->
+    <div class="side-drawer-backdrop" id="historyDrawerBackdrop"></div>
+    <aside class="history-drawer-panel" id="historyDrawerPanel" aria-label="Chat history">
+      <div class="map-drawer-header">
+        <div class="drawer-title">
+          <span>Chat History</span>
+          <span class="drawer-sub">Saved on this device only</span>
+        </div>
+        <button type="button" class="icon-btn" id="closeHistoryDrawerBtn" title="Close history">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="history-toolbar">
+        <input type="search" id="historySearchInput" class="history-search" placeholder="Search chats..." aria-label="Search chats">
+        <button type="button" class="mini-btn clear" id="clearHistoryBtn" title="Delete all saved chats">Clear all</button>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </aside>
+
+    <!-- ===================== Sea Alerts & Marine News Drawer ===================== -->
+    <div class="side-drawer-backdrop" id="alertsDrawerBackdrop"></div>
+    <aside class="alerts-drawer-panel" id="alertsDrawerPanel" aria-label="Sea alerts and marine news">
+      <div class="map-drawer-header">
+        <div class="drawer-title">
+          <span>Sea Alerts &amp; Marine News</span>
+          <span class="drawer-sub" id="alertsUpdatedText">Loading live data...</span>
+        </div>
+        <button type="button" class="icon-btn" id="closeAlertsDrawerBtn" title="Close alerts">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="alerts-tabs" role="tablist">
+        <button type="button" class="alerts-tab active" id="seaAlertsTab" data-tab="sea" role="tab">🌊 Sea Alerts</button>
+        <button type="button" class="alerts-tab" id="newsTab" data-tab="news" role="tab">📰 Marine News</button>
+      </div>
+      <div class="alerts-tab-body" id="seaAlertsBody">
+        <div class="alerts-source-note" id="seaAlertsSource"></div>
+        <div class="alerts-list" id="seaAlertsList"></div>
+      </div>
+      <div class="alerts-tab-body" id="newsBody" style="display: none;">
+        <div class="news-lang-row">
+          <button type="button" class="pill-btn active" id="newsLangEn" data-lang="en">English</button>
+          <button type="button" class="pill-btn" id="newsLangTa" data-lang="ta">தமிழ்</button>
+        </div>
+        <div class="alerts-source-note" id="newsSource"></div>
+        <div class="alerts-list" id="newsList"></div>
+      </div>
+    </aside>
+
+    <!-- ===================== Voice Assistant (talk & listen) ===================== -->
+    <div class="voice-overlay" id="voiceOverlay" data-state="idle" role="dialog" aria-modal="true" aria-label="ORCA voice assistant" hidden>
+      <div class="voice-top">
+        <label class="voice-lang" for="voiceLangSelect">
+          <span>Speak in</span>
+          <select id="voiceLangSelect" aria-label="Voice language">
+            <option value="en">English</option>
+            <option value="ta">தமிழ்</option>
+            <option value="hi">हिन्दी</option>
+            <option value="te">తెలుగు</option>
+            <option value="ml">മലയാളം</option>
+            <option value="kn">ಕನ್ನಡ</option>
+            <option value="gu">ગુજરાતી</option>
+            <option value="mr">मराठी</option>
+            <option value="bn">বাংলা</option>
+          </select>
+        </label>
+        <button type="button" class="voice-close" id="voiceCloseBtn" aria-label="Close voice assistant">✕</button>
+      </div>
+
+      <div class="voice-center">
+        <button type="button" class="voice-orb" id="voiceOrb" aria-label="Tap to talk or interrupt">
+          <span class="orb-ring r1"></span>
+          <span class="orb-ring r2"></span>
+          <span class="orb-ring r3"></span>
+          <span class="orb-core"><svg width="54" height="54"><use href="#orcaWaves"/></svg></span>
+        </button>
+        <div class="voice-status" id="voiceStatus">Tap the orb and start talking</div>
+        <div class="voice-transcript" id="voiceTranscript"></div>
+        <div class="voice-warning" id="voiceWarning" hidden></div>
+        <div class="voice-reply" id="voiceReply"></div>
+      </div>
+
+      <div class="voice-bottom">
+        <button type="button" class="voice-ctrl" id="voicePauseBtn">Pause</button>
+        <button type="button" class="voice-end" id="voiceEndBtn">End conversation</button>
+      </div>
+      <p class="voice-note">Your speech is recognised by your browser (Chrome / Edge). Spoken replies use online neural voices and need internet.</p>
+    </div>
+
+    <!-- Pop-up Toast Notifications -->
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+    <!-- ===================== Regional Fine-Tuning Modal ===================== -->
+    <div class="modal-backdrop" id="finetuneModal" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Regional Fine-Tuning Manager</h3>
+          <button type="button" class="icon-btn" id="closeFinetuneModalBtn" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-sub">Retrain output predictor-corrector layers on Copernicus Marine &amp; ARGO Float datasets with FP16 AMP</p>
+
+          <div class="form-group">
+            <label for="ftBaseModel">Base Model</label>
+            <select id="ftBaseModel" class="form-select-sm">
+              <option value="SFNO">NVIDIA SFNO (FourCastNet v3)</option>
+              <option value="PINN_SWIN">PyTorch PINN Thermocline Model</option>
+              <option value="FOURCASTNET">FourCastNet v3</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="ftSourceSelect">Data Source</label>
+            <select id="ftSourceSelect" class="form-select-sm">
+              <option value="COPERNICUS">Copernicus Marine NetCDF Slice</option>
+              <option value="ARGO">ARGO Float Network (0m-2000m Profiles)</option>
+              <option value="SYNTHETIC">Synthetic Indian Ocean Dataset</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="ftEpochsInput">Training Epochs</label>
+            <input type="number" id="ftEpochsInput" value="5" min="1" max="50" class="form-input">
+          </div>
+
+          <button type="button" class="btn btn-primary btn-full" id="startFinetuneBtn">
+            Start Fine-Tuning Loop
+          </button>
+
+          <div class="finetune-status-box" id="ftStatusBox">
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="ftProgressBar" style="width: 0%;"></div>
+            </div>
+            <div class="status-metrics">
+              <span>Epoch: <strong id="ftEpochVal">0/5</strong></span>
+              <span>Loss: <strong id="ftLossVal">0.000000</strong></span>
+              <span>Status: <strong id="ftStateVal">Idle</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Platform Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

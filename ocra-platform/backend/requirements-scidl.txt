@@ -1,0 +1,11 @@
+# Optional heavy Scientific DL stack. The backend runs without these
+# (engines fall back automatically). Install only on a machine with a
+# large GPU / plenty of RAM:  pip install -r requirements-scidl.txt
+earth2studio
+torch
+huggingface_hub
+scipy
+copernicusmarine
+argopy
+cdsapi
+tqdm
